@@ -915,7 +915,7 @@ void collect_charge_gpu (FhdParticleContainer::AoS& aos, FArrayBox& charge, F f,
 {
     using namespace amrex;
     
-    constexpr int twoks = 2*F::ks;
+    constexpr int ks = F::ks;
     
     GpuArray<Real, 3> plo = {plo_in[0], plo_in[1], plo_in[2]};
     GpuArray<Real, 3> dx  = {dx_in[0],  dx_in[1],  dx_in[2] };    
@@ -936,8 +936,8 @@ void collect_charge_gpu (FhdParticleContainer::AoS& aos, FArrayBox& charge, F f,
 
         Real qm = p.rdata(FHD_realData::q)/permittivity;
 
-        Real w[3][twoks];
-        int indices[3][twoks];
+        Real w[3][2*ks];
+        int indices[3][2*ks];
 
         get_weights(p, f, nodal_flag, w, indices, plo, dx, dxi);
         spread_op(arr, f, w, indices, qm*volinv);
