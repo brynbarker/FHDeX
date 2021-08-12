@@ -3,147 +3,6 @@
 
 // compute (alpha - L_beta) phi
 
-// we must retain custom lambda's because the boxes sometimes loop with stride 2
-
-AMREX_GPU_HOST_DEVICE
-inline
-void stag_applyop_visc_p1 (Box const& tbx,
-			   AMREX_D_DECL(Box const& xbx,
-					Box const& ybx,
-					Box const& zbx),
-                           AMREX_D_DECL(Array4<Real const> const& alphax,
-					Array4<Real const> const& alphay,
-					Array4<Real const> const& alphaz),
-                           AMREX_D_DECL(Array4<Real const> const& phix,
-					Array4<Real const> const& phiy,
-					Array4<Real const> const& phiz),
-                           AMREX_D_DECL(Array4<Real> const& Lphix,
-					Array4<Real> const& Lphiy,
-					Array4<Real> const& Lphiz),
-			   AMREX_D_DECL(bool do_x,
-					bool do_y,
-					bool do_z),
-			   Real theta_alpha, Real bt,  Real gt, int offset,  int color,
-			   const GpuArray<Real, AMREX_SPACEDIM> & dx) noexcept
-{
-    // xbx, ybx, and zbx are the face-centered boxes
-
-    // if running on the host
-    // tlo is the minimal box containins the union of the face-centered grid boxes
-
-    // if running on the gpu, tlo is a box with a single point that comes
-    // from the union of the face-centered grid boxes
-
-    const auto tlo = lbound(tbx);
-    const auto thi = ubound(tbx);
-
-    // if running on the host, x/y/zlo and x/y/zhi are set to
-    // the lower/uppser bounds of x/y/zbx
-
-    // if running on the gpu, x/y/zlo and x/y/zhi are set to
-    // the single point defined by tlo, unless tlo is outside of the union
-    // of the face-centered grid boxes, in which case they are set to
-    // values that make sure the loop is not entered
-
-    AMREX_D_TERM(const auto xlo = amrex::elemwiseMax(tlo, lbound(xbx));,
-                 const auto ylo = amrex::elemwiseMax(tlo, lbound(ybx));,
-                 const auto zlo = amrex::elemwiseMax(tlo, lbound(zbx)););
-
-    AMREX_D_TERM(const auto xhi = amrex::elemwiseMin(thi, ubound(xbx));,
-                 const auto yhi = amrex::elemwiseMin(thi, ubound(ybx));,
-                 const auto zhi = amrex::elemwiseMin(thi, ubound(zbx)););
-
-    int ioff;
-
-    Real dxsqinv = 1./(dx[0]*dx[0]);
-    Real dysqinv = 1./(dx[1]*dx[1]);
-#if (AMREX_SPACEDIM == 3)
-    Real dzsqinv = 1./(dx[2]*dx[2]);
-#endif
-
-#if (AMREX_SPACEDIM == 2)
-    Real term1 = 2.*bt*(dxsqinv+dysqinv);
-#elif (AMREX_SPACEDIM == 3)
-    Real term1 = 2.*bt*(dxsqinv+dysqinv+dzsqinv);
-#endif
-
-    Real term2 = bt*dxsqinv;
-    Real term3 = bt*dysqinv;
-
-#if (AMREX_SPACEDIM == 3)
-    Real term4 = bt*dzsqinv;
-#endif
-
-    if (do_x) {
-
-        for (int k = xlo.z; k <= xhi.z; ++k) {
-        for (int j = xlo.y; j <= xhi.y; ++j) {
-        ioff = 0;
-	if (offset == 2 && (xlo.x+j+k)%2 != (color+1)%2 ) {
-	  ioff = 1;
-	}
-        AMREX_PRAGMA_SIMD
-        for (int i = xlo.x+ioff; i <= xhi.x; i+=offset) {
-
-            Lphix(i,j,k) = phix(i,j,k)*(theta_alpha*alphax(i,j,k) + term1)
-                -(phix(i+1,j,k)+phix(i-1,j,k))*term2
-                -(phix(i,j+1,k)+phix(i,j-1,k))*term3
-#if (AMREX_SPACEDIM == 3)
-                -(phix(i,j,k+1)+phix(i,j,k-1))*term4
-#endif
-                ;
-        }
-        }
-        }
-    }
-
-    if (do_y) {
-
-        for (int k = ylo.z; k <= yhi.z; ++k) {
-        for (int j = ylo.y; j <= yhi.y; ++j) {
-        ioff = 0;
-        if (offset == 2 && (ylo.x+j+k)%2 != (color+1)%2 ) {
-	  ioff = 1;
-	}
-        AMREX_PRAGMA_SIMD
-        for (int i = ylo.x+ioff; i <= yhi.x; i+=offset) {
-
-            Lphiy(i,j,k) = phiy(i,j,k)*(theta_alpha*alphay(i,j,k) + term1)
-                -(phiy(i+1,j,k)+phiy(i-1,j,k))*term2
-                -(phiy(i,j+1,k)+phiy(i,j-1,k))*term3
-#if (AMREX_SPACEDIM == 3)
-                -(phiy(i,j,k+1)+phiy(i,j,k-1))*term4
-#endif
-                ;
-        }
-        }
-        }
-    }
-
-#if (AMREX_SPACEDIM == 3)
-    if (do_z) {
-
-        for (int k = zlo.z; k <= zhi.z; ++k) {
-        for (int j = zlo.y; j <= zhi.y; ++j) {
-        ioff = 0;
-        if (offset == 2 && (zlo.x+j+k)%2 != (color+1)%2 ) {
-	  ioff = 1;
-	}
-        AMREX_PRAGMA_SIMD
-        for (int i = zlo.x+ioff; i <= zhi.x; i+=offset) {
-
-            Lphiz(i,j,k) = phiz(i,j,k)*(theta_alpha*alphaz(i,j,k) + term1)
-                -(phiz(i+1,j,k)+phiz(i-1,j,k))*term2
-                -(phiz(i,j+1,k)+phiz(i,j-1,k))*term3
-                -(phiz(i,j,k+1)+phiz(i,j,k-1))*term4;
-        }
-        }
-        }
-    }
-#endif
-
-}
-
 AMREX_GPU_HOST_DEVICE
 inline
 void stag_applyop_visc_m1 (Box const& tbx,
@@ -746,46 +605,46 @@ void StagApplyOp(const Geometry & geom,
 #endif
 
             if (do_x) {
-            amrex::ParallelFor(bx_x, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-                if (offset == 1 | (i+j+k)%2 != color%2) {
-                    Lphix(i,j,k) = phix(i,j,k)*(theta_alpha*alphax(i,j,k) + term1)
-                        -(phix(i+1,j,k)+phix(i-1,j,k))*term2
-                        -(phix(i,j+1,k)+phix(i,j-1,k))*term3
+                amrex::ParallelFor(bx_x, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    if (offset == 1 | (i+j+k)%2 != color%2) {
+                        Lphix(i,j,k) = phix(i,j,k)*(theta_alpha*alphax(i,j,k) + term1)
+                            -(phix(i+1,j,k)+phix(i-1,j,k))*term2
+                            -(phix(i,j+1,k)+phix(i,j-1,k))*term3
 #if (AMREX_SPACEDIM == 3)
-                        -(phix(i,j,k+1)+phix(i,j,k-1))*term4
+                            -(phix(i,j,k+1)+phix(i,j,k-1))*term4
 #endif
-                        ;
-                }
-            });
+                            ;
+                    }
+                });
             }
 
             if (do_y) {
-            amrex::ParallelFor(bx_y, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-                if (offset == 1 | (i+j+k)%2 != color%2) {
-                    Lphiy(i,j,k) = phiy(i,j,k)*(theta_alpha*alphay(i,j,k) + term1)
-                        -(phiy(i+1,j,k)+phiy(i-1,j,k))*term2
-                        -(phiy(i,j+1,k)+phiy(i,j-1,k))*term3
+                amrex::ParallelFor(bx_y, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    if (offset == 1 | (i+j+k)%2 != color%2) {
+                        Lphiy(i,j,k) = phiy(i,j,k)*(theta_alpha*alphay(i,j,k) + term1)
+                            -(phiy(i+1,j,k)+phiy(i-1,j,k))*term2
+                            -(phiy(i,j+1,k)+phiy(i,j-1,k))*term3
 #if (AMREX_SPACEDIM == 3)
-                        -(phiy(i,j,k+1)+phiy(i,j,k-1))*term4
+                            -(phiy(i,j,k+1)+phiy(i,j,k-1))*term4
 #endif
-                        ;
-                }
-            });
+                            ;
+                    }
+                });
             }
             
 #if (AMREX_SPACEDIM == 3)
             if (do_z) {
-            amrex::ParallelFor(bx_z, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-                if (offset == 1 | (i+j+k)%2 != color%2) {
-                    Lphiz(i,j,k) = phiz(i,j,k)*(theta_alpha*alphaz(i,j,k) + term1)
-                        -(phiz(i+1,j,k)+phiz(i-1,j,k))*term2
-                        -(phiz(i,j+1,k)+phiz(i,j-1,k))*term3
-                        -(phiz(i,j,k+1)+phiz(i,j,k-1))*term4;
-                }
-            });
+                amrex::ParallelFor(bx_z, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    if (offset == 1 | (i+j+k)%2 != color%2) {
+                        Lphiz(i,j,k) = phiz(i,j,k)*(theta_alpha*alphaz(i,j,k) + term1)
+                            -(phiz(i+1,j,k)+phiz(i-1,j,k))*term2
+                            -(phiz(i,j+1,k)+phiz(i,j-1,k))*term3
+                            -(phiz(i,j,k+1)+phiz(i,j,k-1))*term4;
+                    }
+                });
             }
 #endif
         }
