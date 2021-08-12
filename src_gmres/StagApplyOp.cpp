@@ -726,15 +726,68 @@ void StagApplyOp(const Geometry & geom,
         }
 
         if (visc_type == 1) {
-            AMREX_LAUNCH_HOST_DEVICE_LAMBDA(index_bounds, tbx,
+            Real dxsqinv = 1./(dx[0]*dx[0]);
+            Real dysqinv = 1./(dx[1]*dx[1]);
+#if (AMREX_SPACEDIM == 3)
+            Real dzsqinv = 1./(dx[2]*dx[2]);
+#endif
+
+#if (AMREX_SPACEDIM == 2)
+            Real term1 = 2.*bt*(dxsqinv+dysqinv);
+#elif (AMREX_SPACEDIM == 3)
+            Real term1 = 2.*bt*(dxsqinv+dysqinv+dzsqinv);
+#endif
+
+            Real term2 = bt*dxsqinv;
+            Real term3 = bt*dysqinv;
+
+#if (AMREX_SPACEDIM == 3)
+            Real term4 = bt*dzsqinv;
+#endif
+
+            if (do_x) {
+            amrex::ParallelFor(bx_x, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-                stag_applyop_visc_p1(tbx, AMREX_D_DECL(bx_x,bx_y,bx_z),
-                                     AMREX_D_DECL(alphax,alphay,alphaz),
-                                     AMREX_D_DECL(phix,phiy,phiz),
-                                     AMREX_D_DECL(Lphix,Lphiy,Lphiz),
-                                     AMREX_D_DECL(do_x,do_y,do_z),
-                                     theta_alpha, bt, gt, offset, color, dx_gpu);
+                if (offset == 1 | (i+j+k)%2 != color%2) {
+                    Lphix(i,j,k) = phix(i,j,k)*(theta_alpha*alphax(i,j,k) + term1)
+                        -(phix(i+1,j,k)+phix(i-1,j,k))*term2
+                        -(phix(i,j+1,k)+phix(i,j-1,k))*term3
+#if (AMREX_SPACEDIM == 3)
+                        -(phix(i,j,k+1)+phix(i,j,k-1))*term4
+#endif
+                        ;
+                }
             });
+            }
+
+            if (do_y) {
+            amrex::ParallelFor(bx_y, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+                if (offset == 1 | (i+j+k)%2 != color%2) {
+                    Lphiy(i,j,k) = phiy(i,j,k)*(theta_alpha*alphay(i,j,k) + term1)
+                        -(phiy(i+1,j,k)+phiy(i-1,j,k))*term2
+                        -(phiy(i,j+1,k)+phiy(i,j-1,k))*term3
+#if (AMREX_SPACEDIM == 3)
+                        -(phiy(i,j,k+1)+phiy(i,j,k-1))*term4
+#endif
+                        ;
+                }
+            });
+            }
+            
+#if (AMREX_SPACEDIM == 3)
+            if (do_z) {
+            amrex::ParallelFor(bx_z, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+                if (offset == 1 | (i+j+k)%2 != color%2) {
+                    Lphiz(i,j,k) = phiz(i,j,k)*(theta_alpha*alphaz(i,j,k) + term1)
+                        -(phiz(i+1,j,k)+phiz(i-1,j,k))*term2
+                        -(phiz(i,j+1,k)+phiz(i,j-1,k))*term3
+                        -(phiz(i,j,k+1)+phiz(i,j,k-1))*term4;
+                }
+            });
+            }
+#endif
         }
         else if (visc_type == -1) {
             AMREX_LAUNCH_HOST_DEVICE_LAMBDA(index_bounds, tbx,
