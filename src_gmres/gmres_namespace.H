@@ -59,5 +59,7 @@ namespace gmres {
     extern int         gmres_min_iter;        // min number of gmres iterations
 
     extern int         gmres_spatial_order;   // spatial order of viscous and gradient operators in matrix "A"
+
+  extern amrex::Gpu::DeviceVector<amrex::Real> testvector;
 }
 

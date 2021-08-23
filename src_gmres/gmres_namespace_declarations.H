@@ -32,3 +32,5 @@ int         gmres::gmres_max_inner;
 int         gmres::gmres_max_iter;
 int         gmres::gmres_min_iter;
 int         gmres::gmres_spatial_order;
+
+amrex::Gpu::DeviceVector<amrex::Real> testvector;

@@ -107,4 +107,5 @@ void InitializeGmresNamespace() {
     pp.query("gmres_min_iter",gmres_min_iter);
     pp.query("gmres_spatial_order",gmres_spatial_order);
 
+    testvector.resize(3);
 }
