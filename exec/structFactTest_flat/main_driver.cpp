@@ -21,7 +21,6 @@ void main_driver(const char* argv)
 
     std::string inputs_file = argv;
 
-
     // copy contents of F90 modules to C++ namespaces
     InitializeCommonNamespace();
 
@@ -52,6 +51,11 @@ void main_driver(const char* argv)
     }
 
     const Real* dx = geom.CellSize();
+    GpuArray<Real,AMREX_SPACEDIM> dx_gpu{AMREX_D_DECL(dx[0], dx[1], dx[2])};
+    
+    RealVect L(AMREX_D_DECL(prob_hi[0]-prob_lo[0], prob_hi[1]-prob_lo[1], prob_hi[2]-prob_lo[2]));
+
+    Real pi = 3.141592653589793;
 
     // we may need to use dVol for scaling
     Real dVol = dx[0]*dx[1];
@@ -92,12 +96,11 @@ void main_driver(const char* argv)
 
         amrex::ParallelFor(bx, 2, [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         {
-            if (n == 0) {
-                struct_fab(i,j,k,n) = i+j+k;
-            }
-            else if (n == 1) {
-                struct_fab(i,j,k,n) = 0.5*sqrt(i+j+k);
-            }
+            Real x = prob_lo[0] + (i+0.5)*dx_gpu[0];
+            Real y = prob_lo[1] + (j+0.5)*dx_gpu[1];
+            
+            struct_fab(i,j,k,n) = sin(4.*pi*x / L[0]) + sin(4.*pi*y / L[1]) + sin(4.*pi*x / L[0]) * sin(4.*pi*y / L[1]);
+
         });
 
     }
