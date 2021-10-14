@@ -10,3 +10,5 @@
   max_grid_size = 16 16 32
 
   project_dir = 2
+
+  slicepoint = -1

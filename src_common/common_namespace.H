@@ -210,7 +210,7 @@ namespace common {
     extern AMREX_GPU_MANAGED amrex::Real searchDist;    
 
     // projection 
-    extern int                        project_dir;
+    extern AMREX_GPU_MANAGED int      project_dir;
     extern int                        slicepoint;
     extern amrex::Vector<int>         max_grid_projection;
 
