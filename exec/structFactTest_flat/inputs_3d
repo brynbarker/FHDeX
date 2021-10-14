@@ -9,5 +9,4 @@
   # max number of cells in a box
   max_grid_size = 16 16 32
 
-
-
+  project_dir = 2
