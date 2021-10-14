@@ -301,14 +301,12 @@ void main_driver(const char* argv)
     
     Geometry geom_flat_2D;
 
-    MultiFab mf_flat_temp; // temporary MF for getting the correct geom_flat_2D and ba_flat_2D
-    mf_flat_temp.define(ba, dmap, 2, 0);
-    mf_flat_temp.setVal(0.0);
-    ComputeVerticalAverage(mf_full, mf_flat_temp, geom, 2, 0, 2);
-    MultiFab mf_flat_temp_rot = RotateFlattenedMF(mf_flat_temp);
+    MultiFab mf_flat_master;
+    ComputeVerticalAverage(mf_full, mf_flat_master, geom, 2, 0, 2);
+    MultiFab mf_flat_master_rot = RotateFlattenedMF(mf_flat_master);
 
-    BoxArray ba_flat_2D = mf_flat_temp_rot.boxArray();
-    const DistributionMapping& dmap_flat_2D = mf_flat_temp_rot.DistributionMap();
+    BoxArray ba_flat_2D = mf_flat_master_rot.boxArray();
+    const DistributionMapping& dmap_flat_2D = mf_flat_master_rot.DistributionMap();
     {
         IntVect dom_lo(AMREX_D_DECL(0,0,0));
         IntVect dom_hi;
@@ -344,7 +342,10 @@ void main_driver(const char* argv)
        MultiFab mf_flat_2D, mf_flat_2D_rot;
        ExtractSliceI(mf_full, mf_flat_2D, geom, 2, i, 0, 2);
        mf_flat_2D_rot = RotateFlattenedMF(mf_flat_2D);
-       structFact_2D_array[i].FortStructure(mf_flat_2D_rot,geom_flat_2D);
+
+       mf_flat_master_rot.ParallelCopy(mf_flat_2D_rot, 0, 0, 2);
+       
+       structFact_2D_array[i].FortStructure(mf_flat_master_rot,geom_flat_2D);
     }
 
     MultiFab mag_2D;
