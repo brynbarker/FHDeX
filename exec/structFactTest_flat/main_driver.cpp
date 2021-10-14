@@ -95,10 +95,8 @@ void main_driver(const char* argv)
 
             if (project_dir == 0) {
                 struct_fab(i,j,k,n) = sin(4.*pi*y / L[1]) + sin(4.*pi*z / L[2]) + sin(4.*pi*y / L[1]) * sin(4.*pi*z / L[2]);
-
             } else if (project_dir == 1) {
                 struct_fab(i,j,k,n) = sin(4.*pi*x / L[0]) + sin(4.*pi*z / L[2]) + sin(4.*pi*x / L[0]) * sin(4.*pi*z / L[2]);
-
             } else if (project_dir == 2) {
                 struct_fab(i,j,k,n) = sin(4.*pi*x / L[0]) + sin(4.*pi*y / L[1]) + sin(4.*pi*x / L[0]) * sin(4.*pi*y / L[1]);
             } else {
@@ -160,6 +158,9 @@ void main_driver(const char* argv)
     BoxArray ba_flat = mf_flat_rot.boxArray();
     const DistributionMapping& dmap_flat = mf_flat_rot.DistributionMap();
 
+    // this brace is used for some temporaries used to build geom
+    // so everything in here goes out of scope
+    // this section is used to build the geometry object for flattened
     {
         IntVect dom_lo(AMREX_D_DECL(0,0,0));
         IntVect dom_hi;
