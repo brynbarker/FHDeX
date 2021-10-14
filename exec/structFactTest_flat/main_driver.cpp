@@ -343,6 +343,9 @@ void main_driver(const char* argv)
        ExtractSliceI(mf_full, mf_flat_2D, geom, 2, i, 0, 2);
        mf_flat_2D_rot = RotateFlattenedMF(mf_flat_2D);
 
+       // copy the result from a rotated or vertically-averaged dataset into the master
+       // flattened multifab so it has the BoxArray and DistributionMap that the
+       // flattened structure factor object expects
        mf_flat_master_rot.ParallelCopy(mf_flat_2D_rot, 0, 0, 2);
        
        structFact_2D_array[i].FortStructure(mf_flat_master_rot,geom_flat_2D);
