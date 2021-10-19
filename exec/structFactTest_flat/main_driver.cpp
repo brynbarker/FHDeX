@@ -203,7 +203,7 @@ void main_driver(const char* argv)
         ComputeVerticalAverage(mf_full, mf_flat, geom, project_dir, 0, 2);
     } else {
         // extract a slice at slicepoint in the project_dir plane
-        ExtractSlice(mf_full, mf_flat, geom, project_dir, 0, 2);        
+        ExtractSlice(mf_full, mf_flat, geom, project_dir, slicepoint, 0, 2);
     }
     
     // we rotate this flattened MultiFab to have normal in the z-direction since
@@ -340,7 +340,7 @@ void main_driver(const char* argv)
 
     for (int i=0; i<n_cells[2]; ++i) {
        MultiFab mf_flat_2D, mf_flat_2D_rot;
-       ExtractSliceI(mf_full, mf_flat_2D, geom, 2, i, 0, 2);
+       ExtractSlice(mf_full, mf_flat_2D, geom, 2, i, 0, 2);
        mf_flat_2D_rot = RotateFlattenedMF(mf_flat_2D);
 
        // copy the result from a rotated or vertically-averaged dataset into the master
