@@ -1,30 +1,30 @@
-
-
   # Problem specification
   prob_lo = 0.0 0.0 0.0      # physical lo coordinate
-  prob_hi = 7.68e-4 3.84e-4 3.84e-4 # physical hi coordinate
+  prob_hi = 3.2e-5 20.48e-4 10.24e-4 # physical hi coordinate
+  prob_hi = 10.24e-4 40.24e-4 5.12e-4 # physical hi coordinate
+
   # Number of ghost cells, conserved, and primitive variables
   # ---------------------
+  nspecies = 2
   ngc = 2 2 2
-  nvars = 9
-  nprimvars = 14
+  nvars = 7
+  nprimvars = 10
 
   # number of cells in domain
-  n_cells = 64 32 32
+  n_cells = 128 128 64
   # max number of cells in a box
-  max_grid_size = 16 16 16
+  max_grid_size = 256 256 256
 
   # Time-step control
-  fixed_dt = 5.0e-12
+  fixed_dt = 2.5e-13
+
+  seed = 1
 
   # Controls for number of steps between actions
-  max_step = 3
-  plot_int = 3
-
-  # random number seed
-  # 0        = unpredictable seed based on clock
-  # positive = fixed seed
-  seed = 1
+  max_step = 400000
+  plot_int = 1000
+  struct_fact_int = -10
+  chk_int = 50000
 
   # Multispecies toggle
   # if algorithm_type = 1, single component
@@ -40,22 +40,22 @@
   # Advection method
   # if advection_type = 1, interpolate primitive quantities
   # if advection_type = 2, interpolate conserved quantities
-  advection_type = 2
+  advection_type = 1
 
   # Problem specification
   # if prob_type = 1, constant species concentration
   # if prob_type = 2, Rayleigh-Taylor instability
   # if prob_type = 3, diffusion barrier
-  prob_type = 2
+  prob_type = 109
 
   # Initial parameters
   k_B = 1.38064852e-16	# [units: cm2*g*s-2*K-1]
   Runiv = 8.314462175e7
   T_init = 300
-  rho0 = 4.83e-4
+  rho0 = 0.0014
+  rhobar = 0.5 0.5
 
-  struct_fact_int = 0
-  n_steps_skip = 0
+  grav = 0.0 0.0 -7.0e12
   
   # Boundary conditions:
   # NOTE: setting bc_vel to periodic sets all the other bc's to periodic)
@@ -68,34 +68,31 @@
   # bc_therm: -1 = periodic
   #            1 = adiabatic
   #            2 = isothermal (set with t_lo/hi in common namelist)
-  bc_vel_lo   = -1 -1 1
-  bc_vel_hi   = -1 -1 1
+  bc_vel_lo = -1 -1 1
+  bc_vel_hi = -1 -1 1
   bc_mass_lo  = -1 -1 1
   bc_mass_hi  = -1 -1 1
   bc_therm_lo = -1 -1 1
   bc_therm_hi = -1 -1 1
-
-  # Temperature if thermal BC specified
-  t_hi = 300 300 300
-  t_lo = 300 300 300
+  
+  bc_Yk_z_lo = 0.7 0.3
+  bc_Yk_z_hi = 0.3 0.7
+  rho_lo = 0.00014 0.00014 0.00014
+  rho_hi = 0.0014 0.0014 0.0014
 
   #Kinetic species info
   #--------------
-  nspecies = 4
-  
-  molmass = 2.0 20.0 2.0 20.0
-  diameter = 2.0e-8 20.0e-8 20.0e-8 2.0e-8
-  rhobar = 0.25 0.25 0.25 0.25
+  molmass =  10.0 100.0
+  diameter = 3.63e-7 3.63e-7
 
-  #Enter negative dof to use hcv & hcp values
-  dof =  3 3 3 3
-  hcv = -1 -1 -1 -1
-  hcp = -1 -1 -1 -1
-
-  grav = 0.0 0.0 -4.0e12
+  # Enter negative dof to use hcv & hcp values
+  dof =  3 3
+  hcv = -1 -1
+  hcp = -1 -1
 
   # write out means and variances to plotfile
-  plot_means = 1
-  plot_vars = 1
+  # plot_means = 1
+  # plot_vars = 1
+  # plot_covars = 1
 
-
+  transport_type = 1

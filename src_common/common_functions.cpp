@@ -43,6 +43,7 @@ int                        common::chk_int;
 std::string                common::chk_base_name;
 AMREX_GPU_MANAGED int      common::prob_type;
 int                        common::restart;
+int                        common::stats_int;
 int                        common::reset_stats;
 int                        common::particle_restart;
 int                        common::print_int;
@@ -60,6 +61,7 @@ AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::hcp;
 
 AMREX_GPU_MANAGED amrex::Real common::variance_coef_mom;
 AMREX_GPU_MANAGED amrex::Real common::variance_coef_mass;
+AMREX_GPU_MANAGED amrex::Real common::variance_coef_ener;
 AMREX_GPU_MANAGED amrex::Real common::k_B;
 AMREX_GPU_MANAGED amrex::Real common::h_bar;
 AMREX_GPU_MANAGED amrex::Real common::Runiv;
@@ -179,7 +181,11 @@ AMREX_GPU_MANAGED amrex::GpuArray<int, MAX_SPECIES>         common::p_int_tog_wa
 AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::eepsilon_wall;
 AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::sigma_wall;
 AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::rmin_wall;
+AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::offset_wall;
 AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, MAX_SPECIES> common::rmax_wall;
+
+AMREX_GPU_MANAGED amrex::GpuArray<int, MAX_SPECIES>         common::msd_int;
+AMREX_GPU_MANAGED amrex::GpuArray<int, MAX_SPECIES>         common::msd_len;
 
 int                        common::poisson_verbose;
 int                        common::poisson_bottom_verbose;
@@ -337,6 +343,12 @@ void InitializeCommonNamespace() {
     
     // p_int_tog_wall (no default)
     particle_neff = 1;
+    
+    
+    for (int i=0; i<MAX_SPECIES; ++i) {
+        msd_int[i] = 0;
+        msd_len[i] = 0;
+    }
 
     // Time-step control
     fixed_dt = 1.;
@@ -355,6 +367,7 @@ void InitializeCommonNamespace() {
     chk_base_name = "chk";
     prob_type = 1;
     restart = -1;
+    stats_int = 1;
     reset_stats = 0;
     particle_restart = -1;
     print_int = 0;
@@ -386,6 +399,7 @@ void InitializeCommonNamespace() {
     // stochastic forcing amplitudes (1 for physical values, 0 to run them off)
     variance_coef_mom = 1.;
     variance_coef_mass = 1.;
+    variance_coef_ener = 1.;
     k_B = 1.38064852e-16;
     h_bar = 1.0546e-27;
     Runiv = 8.314462175e7;
@@ -650,6 +664,7 @@ void InitializeCommonNamespace() {
     pp.query("chk_base_name",chk_base_name);
     pp.query("prob_type",prob_type);
     pp.query("restart",restart);
+    pp.query("stats_int",stats_int);
     pp.query("reset_stats",reset_stats);
     pp.query("particle_restart",particle_restart);
     pp.query("print_int",print_int);
@@ -697,6 +712,7 @@ void InitializeCommonNamespace() {
     }
     pp.query("variance_coef_mom",variance_coef_mom);
     pp.query("variance_coef_mass",variance_coef_mass);
+    pp.query("variance_coef_ener",variance_coef_ener);
     pp.query("k_B",k_B);
     pp.query("h_bar",h_bar);
     pp.query("Runiv",Runiv);
@@ -964,6 +980,16 @@ void InitializeCommonNamespace() {
             p_int_tog_wall[i] = temp_int[i];
         }
     }
+    if (pp.queryarr("msd_int",temp_int,0,nspecies)) {
+        for (int i=0; i<nspecies; ++i) {
+            msd_int[i] = temp_int[i];
+        }
+    }
+    if (pp.queryarr("msd_len",temp_int,0,nspecies)) {
+        for (int i=0; i<nspecies; ++i) {
+            msd_len[i] = temp_int[i];
+        }
+    }
     if (pp.queryarr("eepsilon_wall",temp,0,nspecies)) {
         for (int i=0; i<nspecies; ++i) {
             eepsilon_wall[i] = temp[i];
@@ -977,6 +1003,11 @@ void InitializeCommonNamespace() {
     if (pp.queryarr("rmin_wall",temp,0,nspecies)) {
         for (int i=0; i<nspecies; ++i) {
             rmin_wall[i] = temp[i];
+        }
+    }
+    if (pp.queryarr("offset_wall",temp,0,nspecies)) {
+        for (int i=0; i<nspecies; ++i) {
+            offset_wall[i] = temp[i];
         }
     }
     if (pp.queryarr("rmax_wall",temp,0,nspecies)) {
