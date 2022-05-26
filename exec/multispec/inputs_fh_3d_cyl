@@ -24,7 +24,7 @@
   max_step = 300000
   plot_int = 1000
   chk_int = 1000
-  restart = 283000
+  #restart = 283000
 
   # Viscous friction L phi operator
   # if abs(visc_type) = 1, L = div beta grad
