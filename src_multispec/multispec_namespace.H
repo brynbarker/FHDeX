@@ -57,5 +57,9 @@ namespace multispec {
     extern amrex::Real                L_pos;
     extern amrex::Real                L_trans;
     extern amrex::Real                L_zero;
+
+    // optionally turn off fluctuations after a few steps
+    extern AMREX_GPU_MANAGED int      fluct_off_step;
+
 }
 
