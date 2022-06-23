@@ -59,6 +59,9 @@ amrex::Real                                                 multispec::L_zero;
 AMREX_GPU_MANAGED int                                       multispec::pressure_jump_projection;
 AMREX_GPU_MANAGED int                                       multispec::gibbs_duhem_kappa_flag;
 
+// turn off fluctuations
+AMREX_GPU_MANAGED int                                       multispec::fluct_off_step;
+
 void InitializeMultispecNamespace() {
 
     E_ext_value.resize(AMREX_SPACEDIM);
@@ -85,6 +88,7 @@ void InitializeMultispecNamespace() {
 
     pressure_jump_projection = 0;   // compute pressure correction diagnosity before projection
     gibbs_duhem_kappa_flag = 1;   // compute pressure correction diagnosity before projection
+    fluct_off_step = -1;    // default don't turn off fluctuations ever
 
     // Initial and boundary conditions 
     //----------------------
@@ -192,6 +196,7 @@ void InitializeMultispecNamespace() {
     pp.query("temp_type",temp_type);
     pp.query("pressure_jump_projection",pressure_jump_projection);
     pp.query("gibbs_duhem_kappa_flag",gibbs_duhem_kappa_flag);
+    pp.query("fluct_off_step",fluct_off_step);
     if(pp.queryarr("fh_kappa",temp)) {
         for (int i=0; i<nspecies; ++i) {
         for (int j=0; j<nspecies; ++j) {

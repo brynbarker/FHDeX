@@ -635,6 +635,11 @@ void main_driver(const char* argv)
 
         amrex::Print() << "Curent     FAB megabyte spread across MPI nodes: ["
                        << min_fab_megabytes << " ... " << max_fab_megabytes << "]\n";
+
+	if (fluct_off_step >= 0 && istep >= fluct_off_step) {
+	    variance_coef_mom = 0;
+	    variance_coef_mass = 0;
+	}
         
     }
 

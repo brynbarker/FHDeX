@@ -62,5 +62,8 @@ namespace multispec {
     extern AMREX_GPU_MANAGED int      pressure_jump_projection;
     extern AMREX_GPU_MANAGED int      gibbs_duhem_kappa_flag;
 
+    // optionally turn off fluctuations after a few steps
+    extern AMREX_GPU_MANAGED int      fluct_off_step;
+
 }
 
